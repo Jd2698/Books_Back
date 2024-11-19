@@ -1,4 +1,10 @@
-import { IsDateString, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import {
+  IsDateString,
+  IsIn,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+} from 'class-validator';
 
 export class CreateLoanDto {
   @IsNotEmpty()
@@ -16,4 +22,10 @@ export class CreateLoanDto {
   @IsNotEmpty()
   @IsDateString()
   fechaDevolucion: Date;
+
+  @IsOptional()
+  @IsIn([0, 1], {
+    message: 'Value must be 0 or 1',
+  })
+  entregado: number;
 }

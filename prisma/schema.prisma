@@ -12,36 +12,35 @@ datasource db {
 }
 
 model Usuario {
-  id                  Int     @default(autoincrement()) @id
-  name                String  
-  email               String  @unique
-  telefono            String?
+  id       Int     @id @default(autoincrement())
+  name     String
+  email    String  @unique
+  telefono String?
 
-  prestamos        Prestamo[]
+  prestamos Prestamo[]
 }
 
 model Book {
-  id                  Int     @default(autoincrement()) @id
-  titulo              String  @unique
-  fechaPublicacion    DateTime
-  genero              String
-  numPaginas          Int?
-  resumen             String?
-  autor               String
-  stock_disponible    Int
+  id               Int      @id @default(autoincrement())
+  titulo           String   @unique
+  fechaPublicacion DateTime
+  genero           String
+  numPaginas       Int?
+  resumen          String?
+  autor            String
+  stock_disponible Int
 
-  prestamos        Prestamo[]
+  prestamos Prestamo[]
 }
 
 model Prestamo {
-  id                  Int     @default(autoincrement()) @id
-  usuarioId           Int
-  libroId             Int
-  fechaPrestamo       DateTime
-  fechaDevolucion     DateTime
+  id              Int      @id @default(autoincrement())
+  usuarioId       Int
+  libroId         Int
+  fechaPrestamo   DateTime
+  fechaDevolucion DateTime
+  entregado       Int      @default(0)
 
-  usuario    Usuario?    @relation(fields: [usuarioId], references: [id])
-  libro      Book?       @relation(fields: [libroId], references: [id])
+  usuario Usuario? @relation(fields: [usuarioId], references: [id])
+  libro   Book?    @relation(fields: [libroId], references: [id], onDelete: Cascade)
 }
-
-
