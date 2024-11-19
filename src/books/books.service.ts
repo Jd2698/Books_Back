@@ -1,46 +1,65 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma.service';
-import { CreateBookDto } from './dto/create-book.dto';
-import { UpdateBookDto } from './dto/update-book.dto';
+import {
+	ConflictException,
+	Injectable,
+	InternalServerErrorException,
+	NotFoundException
+} from '@nestjs/common'
+import { PrismaService } from 'src/prisma.service'
+import { CreateBookDto } from './dto/create-book.dto'
+import { UpdateBookDto } from './dto/update-book.dto'
 
 @Injectable()
 export class BooksService {
-  constructor(private _prismaService: PrismaService) {}
+	constructor(private _prismaService: PrismaService) {}
 
-  async getAllBooks(): Promise<any> {
-    return await this._prismaService.book.findMany();
-  }
+	async getAllBooks(): Promise<any> {
+		return await this._prismaService.book.findMany()
+	}
 
-  async getBook(bookId: number): Promise<any> {
-    return await this._prismaService.book.findFirst({
-      where: {
-        id: bookId,
-      },
-    });
-  }
+	async getBookById(bookId: number): Promise<any> {
+		const book = await this._prismaService.book.findFirst({
+			where: {
+				id: bookId
+			}
+		})
 
-  async createBook(newBook: CreateBookDto): Promise<any> {
-    const createdBook = await this._prismaService.book.create({
-      data: newBook,
-    });
+		if (!book) throw new NotFoundException()
+		return book
+	}
 
-    return createdBook;
-  }
+	async createBook(bookData: CreateBookDto): Promise<any> {
+		try {
+			const createdBook = await this._prismaService.book.create({
+				data: bookData
+			})
 
-  async updateBook(bookId: number, book: UpdateBookDto): Promise<any> {
-    const updatedBook = await this._prismaService.book.update({
-      where: { id: bookId },
-      data: book,
-    });
+			return createdBook
+		} catch (error) {
+			if (error.code && error.code == 'P2002') {
+				console.log({ message: 'Conflict error', code: 'p2002', field: 'titulo' })
+				throw new ConflictException()
+			}
+			console.log(error)
+			throw new InternalServerErrorException()
+		}
+	}
 
-    return updatedBook;
-  }
+	async updateBook(bookId: number, bookData: UpdateBookDto): Promise<any> {
+		const updatedBook = await this._prismaService.book.update({
+			where: { id: bookId },
+			data: bookData
+		})
 
-  async deleteBook(bookId: number): Promise<any> {
-    const deletedBook = await this._prismaService.book.delete({
-      where: { id: bookId },
-    });
+		if (!updatedBook) throw new NotFoundException()
+		return updatedBook
+	}
 
-    return deletedBook;
-  }
+	async deleteBook(bookId: number): Promise<any> {
+		const deletedBook = await this._prismaService.book.delete({
+			where: { id: bookId }
+		})
+
+		if (!deletedBook) throw new NotFoundException()
+		return deletedBook
+	}
 }

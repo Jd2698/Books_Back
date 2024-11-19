@@ -22,7 +22,7 @@ model Usuario {
 
 model Book {
   id                  Int     @default(autoincrement()) @id
-  titulo              String  
+  titulo              String  @unique
   fechaPublicacion    DateTime
   genero              String
   numPaginas          Int?
