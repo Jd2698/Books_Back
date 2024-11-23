@@ -1,0 +1,7 @@
+{
+	"usuarioId": 1,
+  	"libroId": 2,
+  	"fechaPrestamo": "2024-11-18T20:17:41.627Z", 
+  	"fechaDevolucion": "2024-12-18T20:17:41.627Z",
+	"estado": "pendiente"
+}

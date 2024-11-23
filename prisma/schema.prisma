@@ -12,23 +12,24 @@ datasource db {
 }
 
 model Usuario {
-  id       Int     @id @default(autoincrement())
-  name     String
-  email    String  @unique
-  telefono String?
+  id         Int     @id @default(autoincrement())
+  nombre     String
+  email      String  @unique
+  telefono   String?
 
   prestamos Prestamo[]
 }
 
-model Book {
+model Libro {
   id               Int      @id @default(autoincrement())
   titulo           String   @unique
   fechaPublicacion DateTime
   genero           String
-  numPaginas       Int?
   resumen          String?
   autor            String
-  stock_disponible Int
+  numPaginas       Int?
+  numLibros        Int
+  disponible       Boolean @default(true)
 
   prestamos Prestamo[]
 }
@@ -39,8 +40,8 @@ model Prestamo {
   libroId         Int
   fechaPrestamo   DateTime
   fechaDevolucion DateTime
-  entregado       Int      @default(0)
+  estado          String
 
   usuario Usuario? @relation(fields: [usuarioId], references: [id])
-  libro   Book?    @relation(fields: [libroId], references: [id], onDelete: Cascade)
+  libro   Libro?    @relation(fields: [libroId], references: [id], onDelete: Cascade)
 }

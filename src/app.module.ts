@@ -1,12 +1,12 @@
-import { Module } from '@nestjs/common';
-import { BooksModule } from './books/books.module';
-import { PrismaService } from './prisma.service';
-import { UsersModule } from './users/users.module';
-import { LoansModule } from './loans/loans.module';
+import { Module } from '@nestjs/common'
+import { PrismaService } from './prisma.service'
+import { BooksModule } from './modules/books/books.module'
+import { UsersModule } from './modules/users/users.module'
+import { LoansModule } from './modules/loans/loans.module'
 
 @Module({
-  imports: [BooksModule, UsersModule, LoansModule],
-  controllers: [],
-  providers: [PrismaService],
+	imports: [BooksModule, UsersModule, LoansModule],
+	controllers: [],
+	providers: [PrismaService]
 })
 export class AppModule {}
