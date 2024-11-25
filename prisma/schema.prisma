@@ -16,6 +16,7 @@ model Usuario {
   nombre     String
   email      String  @unique
   telefono   String?
+  imagen     String?
 
   prestamos Prestamo[]
 }
