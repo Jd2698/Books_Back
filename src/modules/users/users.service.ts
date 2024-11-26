@@ -4,6 +4,7 @@ import {
 	InternalServerErrorException,
 	NotFoundException
 } from '@nestjs/common'
+import { unlink } from 'fs'
 import { PrismaService } from 'src/prisma.service'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
@@ -29,6 +30,8 @@ export class UsersService {
 
 	async createUser(userData: CreateUserDto): Promise<CreateUserDto> {
 		try {
+			if (!userData.imagen) userData.imagen = 'users/default.jpg'
+
 			const userCreated = await this._prismaService.usuario.create({
 				data: userData
 			})
@@ -70,6 +73,10 @@ export class UsersService {
 				where: { id: userId }
 			})
 
+			if (deletedUser.imagen != 'users/default.jpg') {
+				this.deleteImage(deletedUser)
+			}
+
 			return deletedUser
 		} catch (error) {
 			if (error.code == 'P2025') {
@@ -77,6 +84,19 @@ export class UsersService {
 			}
 
 			throw new InternalServerErrorException()
+		}
+	}
+
+	async deleteImage(user: CreateUserDto) {
+		const filePath = `images/${user.imagen}`
+		try {
+			unlink(filePath, err => {
+				if (err) {
+					console.log('Image not found')
+				}
+			})
+		} catch (error) {
+			throw new NotFoundException('Image not found')
 		}
 	}
 }

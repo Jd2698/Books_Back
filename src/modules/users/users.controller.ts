@@ -28,7 +28,7 @@ export class UsersController {
         filename: (req, file, cb) => {
           const timestamp = new Date().toISOString().replace(/[-T:.]/g, '');
           const extension = file.mimetype.split('/')[1];
-          cb(null, `${timestamp}.${extension}`);
+          cb(null, `users/${timestamp}.${extension}`);
         },
       }),
       fileFilter: (req, file, cb) => {
