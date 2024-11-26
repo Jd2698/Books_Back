@@ -20,7 +20,17 @@ import { diskStorage } from 'multer';
 export class UsersController {
   constructor(private _userService: UsersService) {}
 
-  @Post('upload')
+  @Get('')
+  getAllUsers() {
+    return this._userService.getAllUsers();
+  }
+
+  @Get(':id')
+  getUserById(@Param('id', ParseIntPipe) userId: number) {
+    return this._userService.getUserById(userId);
+  }
+
+  @Post('')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
@@ -39,23 +49,12 @@ export class UsersController {
       },
     }),
   )
-  uploadFile(@UploadedFile() file: Express.Multer.File) {
-    return { filename: file.filename };
-  }
-
-  @Get('')
-  getAllUsers() {
-    return this._userService.getAllUsers();
-  }
-
-  @Get(':id')
-  getUserById(@Param('id', ParseIntPipe) userId: number) {
-    return this._userService.getUserById(userId);
-  }
-
-  @Post('')
-  createUser(@Body() userData: CreateUserDto) {
-    return this._userService.createUser(userData);
+  createUser(
+    @Body() userData: CreateUserDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this._userService.createUser(userData, file);
+    // return { filename: file.filename };
   }
 
   @Put(':id')
