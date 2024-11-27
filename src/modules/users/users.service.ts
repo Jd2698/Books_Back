@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { unlink } from 'fs';
+import { unlink, access } from 'fs/promises';
 import { PrismaService } from 'src/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -47,7 +47,6 @@ export class UsersService {
         throw new ConflictException('Field email already is in use');
       }
 
-      // console.log(error)
       throw new InternalServerErrorException();
     }
   }
@@ -55,8 +54,18 @@ export class UsersService {
   async updateUser(
     userId: number,
     userData: UpdateUserDto,
+    file: Express.Multer.File,
   ): Promise<UpdateUserDto> {
     try {
+      if (file) {
+        // eliminar si no es la default
+        userData.imagen != 'users/default.jpg'
+          ? await this.deleteImage(userData.imagen)
+          : '';
+
+        userData.imagen = file.filename;
+      }
+
       const updatedUser = await this._prismaService.usuario.update({
         where: { id: userId },
         data: userData,
@@ -79,7 +88,7 @@ export class UsersService {
       });
 
       if (deletedUser.imagen != 'users/default.jpg') {
-        this.deleteImage(deletedUser);
+        this.deleteImage(deletedUser.imagen);
       }
 
       return deletedUser;
@@ -92,14 +101,10 @@ export class UsersService {
     }
   }
 
-  async deleteImage(user: CreateUserDto) {
-    const filePath = `images/${user.imagen}`;
+  async deleteImage(imagePath: string) {
+    const filePath = `images/${imagePath}`;
     try {
-      unlink(filePath, (err) => {
-        if (err) {
-          console.log('Image not found');
-        }
-      });
+      unlink(filePath);
     } catch (error) {
       throw new NotFoundException('Image not found');
     }

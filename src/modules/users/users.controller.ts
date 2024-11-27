@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -43,7 +44,7 @@ export class UsersController {
       }),
       fileFilter: (req, file, cb) => {
         if (!file.originalname.match(/\.+(jpg|jpeg|png)$/i)) {
-          return cb(new Error('Image does not valid'), false);
+          return cb(new BadRequestException('Image does not valid'), false);
         }
         return cb(null, true);
       },
@@ -54,15 +55,33 @@ export class UsersController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     return this._userService.createUser(userData, file);
-    // return { filename: file.filename };
   }
 
   @Put(':id')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './images',
+        filename: (req, file, cb) => {
+          const timestamp = new Date().toISOString().replace(/[-T:.]/g, '');
+          const extension = file.mimetype.split('/')[1];
+          cb(null, `users/${timestamp}.${extension}`);
+        },
+      }),
+      fileFilter: (req, file, cb) => {
+        if (!file.originalname.match(/\.+(jpg|jpeg|png)$/i)) {
+          return cb(new BadRequestException('Image does not valid'), false);
+        }
+        return cb(null, true);
+      },
+    }),
+  )
   updateUser(
     @Param('id', ParseIntPipe) userId: number,
     @Body() userData: UpdateUserDto,
+    @UploadedFile() file: Express.Multer.File,
   ) {
-    return this._userService.updateUser(userId, userData);
+    return this._userService.updateUser(userId, userData, file);
   }
 
   @Delete(':id')
