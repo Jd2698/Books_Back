@@ -1,112 +1,127 @@
 import {
-  ConflictException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
-import { unlink } from 'fs/promises';
-import { PrismaService } from '../../prisma.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+	ConflictException,
+	Injectable,
+	InternalServerErrorException,
+	NotFoundException
+} from '@nestjs/common'
+import { PrismaService } from '../../prisma.service'
+import { CreateUserDto } from './dto/create-user.dto'
+import { UpdateUserDto } from './dto/update-user.dto'
+import { deleteImage, saveImage } from 'src/common/utils/image.util'
+import { join } from 'path'
 
 @Injectable()
 export class UsersService {
-  constructor(private _prismaService: PrismaService) {}
+	constructor(private _prismaService: PrismaService) {}
 
-  async getAllUsers(): Promise<CreateUserDto[]> {
-    return await this._prismaService.usuario.findMany();
-  }
+	async getAllUsers(): Promise<CreateUserDto[]> {
+		return await this._prismaService.usuario.findMany()
+	}
 
-  async getUserById(userId: number): Promise<CreateUserDto> {
-    const user = await this._prismaService.usuario.findFirst({
-      where: {
-        id: userId,
-      },
-    });
+	async getUserById(userId: number): Promise<CreateUserDto> {
+		const user = await this._prismaService.usuario.findFirst({
+			where: {
+				id: userId
+			}
+		})
 
-    if (!user) throw new NotFoundException('User not found');
-    return user;
-  }
+		if (!user) throw new NotFoundException('User not found')
+		return user
+	}
 
-  async createUser(
-    userData: CreateUserDto,
-    file: Express.Multer.File,
-  ): Promise<any> {
-    try {
-      file
-        ? (userData.imagen = file.filename)
-        : (userData.imagen = 'users/default.jpg');
+	async createUser(
+		userData: CreateUserDto,
+		file: Express.Multer.File
+	): Promise<any> {
+		try {
+			if (!file) {
+				userData.imagen = join('users', 'default.jpg')
+			} else {
+				const pathToSave = ['images', 'users']
+				const { imagePath } = await saveImage(file, pathToSave)
 
-      const userCreated = await this._prismaService.usuario.create({
-        data: userData,
-      });
+				userData.imagen = imagePath
+			}
 
-      return { ...userCreated, fileName: userData.imagen };
-    } catch (error) {
-      if (error.code && error.code == 'P2002') {
-        throw new ConflictException('Field email already is in use');
-      }
+			const userCreated = await this._prismaService.usuario.create({
+				data: userData
+			})
 
-      throw new InternalServerErrorException();
-    }
-  }
+			return { ...userCreated }
+		} catch (error) {
+			userData.imagen && userData.imagen != 'users/default.jpg'
+				? await deleteImage(userData.imagen)
+				: ''
 
-  async updateUser(
-    userId: number,
-    userData: UpdateUserDto,
-    file: Express.Multer.File,
-  ): Promise<UpdateUserDto> {
-    try {
-      if (file) {
-        // eliminar si no es la default
-        userData.imagen != 'users/default.jpg'
-          ? await this.deleteImage(userData.imagen)
-          : '';
+			if (error.code && error.code == 'P2002') {
+				throw new ConflictException('Field email already is in use')
+			}
 
-        userData.imagen = file.filename;
-      }
+			throw new InternalServerErrorException(error.message)
+		}
+	}
 
-      const updatedUser = await this._prismaService.usuario.update({
-        where: { id: userId },
-        data: userData,
-      });
+	async updateUser(
+		userId: number,
+		userData: UpdateUserDto,
+		file: Express.Multer.File
+	): Promise<UpdateUserDto> {
+		try {
+			const foundUsers = await this._prismaService.usuario.findFirst({
+				where: { id: userId }
+			})
 
-      return updatedUser;
-    } catch (error) {
-      if (error.code == 'P2025') {
-        throw new NotFoundException('User not found');
-      }
+			if (!foundUsers) {
+				throw new Error('P2025')
+			}
 
-      throw new InternalServerErrorException();
-    }
-  }
+			if (file) {
+				if (userData.imagen != 'users/default.jpg') {
+					await deleteImage(userData.imagen)
+				}
 
-  async deleteUser(userId: number): Promise<CreateUserDto> {
-    try {
-      const deletedUser = await this._prismaService.usuario.delete({
-        where: { id: userId },
-      });
+				const pathToSave = ['images', 'users']
+				const { imagePath } = await saveImage(file, pathToSave)
 
-      if (deletedUser.imagen != 'users/default.jpg') {
-        this.deleteImage(deletedUser.imagen);
-      }
+				userData.imagen = imagePath
+			}
 
-      return deletedUser;
-    } catch (error) {
-      if (error.code == 'P2025') {
-        throw new NotFoundException('User not found');
-      }
+			const updatedUser = await this._prismaService.usuario.update({
+				where: { id: userId },
+				data: userData
+			})
 
-      throw new InternalServerErrorException();
-    }
-  }
+			return updatedUser
+		} catch (error) {
+			userData.imagen && userData.imagen != 'users/default.jpg'
+				? await deleteImage(userData.imagen)
+				: ''
 
-  async deleteImage(imagePath: string) {
-    const filePath = `images/${imagePath}`;
-    try {
-      unlink(filePath);
-    } catch (error) {
-      throw new NotFoundException('Image not found');
-    }
-  }
+			if (error.code == 'P2025' || error.message == 'P2025') {
+				throw new NotFoundException('User not found')
+			}
+
+			throw new InternalServerErrorException(error.message)
+		}
+	}
+
+	async deleteUser(userId: number): Promise<CreateUserDto> {
+		try {
+			const deletedUser = await this._prismaService.usuario.delete({
+				where: { id: userId }
+			})
+
+			if (deletedUser.imagen != 'users/default.jpg') {
+				await deleteImage(deletedUser.imagen)
+			}
+
+			return deletedUser
+		} catch (error) {
+			if (error.code == 'P2025') {
+				throw new NotFoundException('User not found')
+			}
+
+			throw new InternalServerErrorException(error.message)
+		}
+	}
 }
