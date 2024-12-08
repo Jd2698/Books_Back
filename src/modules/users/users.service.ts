@@ -18,6 +18,17 @@ export class UsersService {
 		return await this._prismaService.usuario.findMany()
 	}
 
+	async getUserByEmail(userEmail: string): Promise<CreateUserDto> {
+		const foundUser = await this._prismaService.usuario.findFirst({
+			where: {
+				email: userEmail
+			}
+		})
+
+		if (!foundUser) throw new NotFoundException('User not found')
+		return foundUser
+	}
+
 	async getUserById(userId: number): Promise<CreateUserDto> {
 		const user = await this._prismaService.usuario.findFirst({
 			where: {
