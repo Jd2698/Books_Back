@@ -9,6 +9,7 @@ import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { deleteImage, saveImage } from 'src/common/utils/image.util'
 import { join } from 'path'
+import * as bcrypt from 'bcrypt'
 
 @Injectable()
 export class UsersService {
@@ -54,6 +55,8 @@ export class UsersService {
 				userData.imagen = imagePath
 			}
 
+			userData.password = await bcrypt.hash(userData.password, 2)
+
 			const userCreated = await this._prismaService.usuario.create({
 				data: userData
 			})
@@ -95,6 +98,11 @@ export class UsersService {
 				const { imagePath } = await saveImage(file, pathToSave)
 
 				userData.imagen = imagePath
+			}
+
+			// si se envia una nueva password
+			if (userData?.password) {
+				userData.password = await bcrypt.hash(userData.password, 2)
 			}
 
 			const updatedUser = await this._prismaService.usuario.update({

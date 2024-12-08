@@ -8,6 +8,7 @@ import {
 	ParseIntPipe,
 	Post,
 	Put,
+	Req,
 	UploadedFile,
 	UseInterceptors
 } from '@nestjs/common'
@@ -16,13 +17,15 @@ import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { FileInterceptorDecorator } from 'src/common/decorators/file-interceptor.decorator'
+import { Request } from 'express'
 
 @Controller('users')
 export class UsersController {
 	constructor(private _userService: UsersService) {}
 
 	@Get('')
-	getAllUsers() {
+	getAllUsers(@Req() req: Request) {
+		// console.log(req['user'])
 		return this._userService.getAllUsers()
 	}
 

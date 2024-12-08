@@ -2,7 +2,8 @@ import {
 	ConflictException,
 	Injectable,
 	InternalServerErrorException,
-	NotFoundException
+	NotFoundException,
+	Req
 } from '@nestjs/common'
 import { PrismaService } from 'src/prisma.service'
 import { CreateBookDto } from './dto/create-book.dto'

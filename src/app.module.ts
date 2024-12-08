@@ -7,7 +7,7 @@ import { ServeStaticModule } from '@nestjs/serve-static'
 import { join } from 'path'
 import { AuthModule } from './modules/auth/auth.module'
 import { APP_GUARD } from '@nestjs/core'
-import { AuthGuard } from './modules/auth/auth.guard'
+import { AuthGuard } from './modules/auth/guards/auth.guard'
 
 @Module({
 	imports: [
