@@ -4,19 +4,19 @@ import { EstadoPrestamo } from 'src/enums/estadoPrestamo.enum'
 export class CreateLoanDto {
 	@IsNotEmpty()
 	@IsNumber()
-	usuarioId: number
+	usuario_id: number
 
 	@IsNotEmpty()
 	@IsNumber()
-	libroId: number
+	libro_id: number
 
 	@IsNotEmpty()
 	@IsDateString()
-	fechaPrestamo: Date
+	fecha_prestamo: Date
 
 	@IsNotEmpty()
 	@IsDateString()
-	fechaDevolucion: Date
+	fecha_devolucion: Date
 
 	@IsNotEmpty()
 	@IsEnum(EstadoPrestamo)

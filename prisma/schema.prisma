@@ -20,30 +20,47 @@ model Usuario {
   imagen     String?
 
   prestamos Prestamo[]
+  usuario_rol Usuario_rol[]
 }
 
 model Libro {
-  id               Int      @id @default(autoincrement())
-  titulo           String   @unique
-  fechaPublicacion DateTime
-  genero           String
-  resumen          String?
-  autor            String
-  numPaginas       Int?
-  numLibros        Int
-  disponible       Boolean @default(true)
+  id                  Int      @id @default(autoincrement())
+  titulo              String   @unique
+  fecha_publicacion   DateTime
+  genero              String
+  resumen             String?
+  autor               String
+  numero_paginas      Int?
+  numero_libros       Int
+  disponible          Boolean @default(true)
 
   prestamos Prestamo[]
 }
 
 model Prestamo {
-  id              Int      @id @default(autoincrement())
-  usuarioId       Int
-  libroId         Int
-  fechaPrestamo   DateTime
-  fechaDevolucion DateTime
-  estado          String
+  id                  Int      @id @default(autoincrement())
+  usuario_id          Int
+  libro_id            Int
+  fecha_prestamo      DateTime
+  fecha_devolucion    DateTime
+  estado              String
 
-  usuario Usuario? @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  libro   Libro?    @relation(fields: [libroId], references: [id], onDelete: Cascade)
+  usuario Usuario? @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  libro   Libro?    @relation(fields: [libro_id], references: [id], onDelete: Cascade)
+}
+
+model Rol {
+  id              Int @id @default(autoincrement())
+  name            String
+
+  usuario_rol Usuario_rol[]
+}
+
+model Usuario_rol {
+  id              Int @id @default(autoincrement())
+  usuario_id      Int 
+  rol_id          Int
+
+  usuario Usuario? @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  rol   Rol?    @relation(fields: [rol_id], references: [id], onDelete: Cascade)
 }

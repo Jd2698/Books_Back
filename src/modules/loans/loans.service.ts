@@ -41,7 +41,7 @@ export class LoansService {
 		try {
 			// verificar disponibilidad del libro
 			const dataVerifyAvailable = await this._bookService.verifyAvailability(
-				loanData.libroId
+				loanData.libro_id
 			)
 
 			if (!dataVerifyAvailable.isAvailable) {
@@ -71,8 +71,7 @@ export class LoansService {
 				}
 			}
 
-			// console.log(error)
-			throw new InternalServerErrorException()
+			throw new InternalServerErrorException(error.message)
 		}
 	}
 
@@ -93,7 +92,7 @@ export class LoansService {
 
 			// verificar disponibilidad y actualizar estado disponible en el libro
 			const { loanCount, book } = await this._bookService.verifyAvailability(
-				updatedLoan.libroId
+				updatedLoan.libro_id
 			)
 
 			await this._bookService.updateAvailability(
@@ -108,7 +107,7 @@ export class LoansService {
 				throw new NotFoundException('Loan not found')
 			}
 
-			throw new InternalServerErrorException()
+			throw new InternalServerErrorException(error.message)
 		}
 	}
 
@@ -122,7 +121,7 @@ export class LoansService {
 
 			// verificar disponibilidad y actualizar estado disponible en el libro
 			const { loanCount, book } = await this._bookService.verifyAvailability(
-				foundLoan.libroId
+				foundLoan.libro_id
 			)
 
 			await this._bookService.updateAvailability(
@@ -130,7 +129,6 @@ export class LoansService {
 				loanCount,
 				book
 			)
-			//
 
 			return foundLoan
 		} catch (error) {

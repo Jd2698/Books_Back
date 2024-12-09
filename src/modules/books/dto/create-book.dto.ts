@@ -17,7 +17,7 @@ export class CreateBookDto {
 
 	@IsNotEmpty()
 	@IsDateString()
-	fechaPublicacion: Date
+	fecha_publicacion: Date
 
 	@IsNotEmpty()
 	@IsString()
@@ -27,12 +27,12 @@ export class CreateBookDto {
 	@IsOptional()
 	@IsNumber()
 	@Min(0)
-	numPaginas?: number
+	numero_paginas?: number
 
 	@IsNotEmpty()
 	@IsNumber()
 	@Min(0)
-	numLibros: number
+	numero_libros: number
 
 	@IsOptional()
 	@IsString()

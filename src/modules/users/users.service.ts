@@ -2,18 +2,22 @@ import {
 	ConflictException,
 	Injectable,
 	InternalServerErrorException,
-	NotFoundException
+	NotFoundException,
+	UnauthorizedException
 } from '@nestjs/common'
 import { PrismaService } from '../../prisma.service'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { deleteImage, saveImage } from 'src/common/utils/image.util'
-import { join } from 'path'
 import * as bcrypt from 'bcrypt'
+import { UsersRolesService } from './users_roles.service'
 
 @Injectable()
 export class UsersService {
-	constructor(private _prismaService: PrismaService) {}
+	constructor(
+		private _prismaService: PrismaService,
+		private _userRolesService: UsersRolesService
+	) {}
 
 	async getAllUsers(): Promise<CreateUserDto[]> {
 		return await this._prismaService.usuario.findMany()
@@ -23,6 +27,13 @@ export class UsersService {
 		const foundUser = await this._prismaService.usuario.findFirst({
 			where: {
 				email: userEmail
+			},
+			include: {
+				usuario_rol: {
+					include: {
+						rol: true
+					}
+				}
 			}
 		})
 
@@ -46,8 +57,16 @@ export class UsersService {
 		file: Express.Multer.File
 	): Promise<any> {
 		try {
+			const emailNotValid = await this._prismaService.usuario.findFirst({
+				where: {
+					email: userData.email
+				}
+			})
+
+			if (emailNotValid) throw new Error('P2002')
+
 			if (!file) {
-				userData.imagen = join('users', 'default.jpg')
+				userData.imagen = 'users/default.jpg'
 			} else {
 				const pathToSave = ['images', 'users']
 				const { imagePath } = await saveImage(file, pathToSave)
@@ -57,17 +76,19 @@ export class UsersService {
 
 			userData.password = await bcrypt.hash(userData.password, 2)
 
-			const userCreated = await this._prismaService.usuario.create({
+			const createdUser = await this._prismaService.usuario.create({
 				data: userData
 			})
 
-			return { ...userCreated }
+			await this._userRolesService.create(createdUser.id, 2)
+
+			return { ...createdUser }
 		} catch (error) {
 			userData.imagen && userData.imagen != 'users/default.jpg'
 				? await deleteImage(userData.imagen)
 				: ''
 
-			if (error.code && error.code == 'P2002') {
+			if (error.message == 'P2002') {
 				throw new ConflictException('Field email already is in use')
 			}
 
@@ -76,18 +97,17 @@ export class UsersService {
 	}
 
 	async updateUser(
+		userSession: { sub: number; email: string; rol: string },
 		userId: number,
 		userData: UpdateUserDto,
 		file: Express.Multer.File
 	): Promise<UpdateUserDto> {
 		try {
-			const foundUsers = await this._prismaService.usuario.findFirst({
-				where: { id: userId }
-			})
+			if (userSession.sub != userId && userSession.rol != 'admin')
+				throw new UnauthorizedException()
 
-			if (!foundUsers) {
-				throw new Error('P2025')
-			}
+			// validar que exista
+			await this.getUserById(userId)
 
 			if (file) {
 				if (userData.imagen != 'users/default.jpg') {
@@ -116,16 +136,17 @@ export class UsersService {
 				? await deleteImage(userData.imagen)
 				: ''
 
-			if (error.code == 'P2025' || error.message == 'P2025') {
-				throw new NotFoundException('User not found')
-			}
-
 			throw new InternalServerErrorException(error.message)
 		}
 	}
 
-	async deleteUser(userId: number): Promise<CreateUserDto> {
+	async deleteUser(
+		userSession: { sub: number; email: string; rol: string },
+		userId: number
+	): Promise<CreateUserDto> {
 		try {
+			if (userSession.rol != 'admin') throw new UnauthorizedException()
+
 			const deletedUser = await this._prismaService.usuario.delete({
 				where: { id: userId }
 			})

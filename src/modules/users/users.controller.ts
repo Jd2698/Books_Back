@@ -24,8 +24,7 @@ export class UsersController {
 	constructor(private _userService: UsersService) {}
 
 	@Get('')
-	getAllUsers(@Req() req: Request) {
-		// console.log(req['user'])
+	getAllUsers() {
 		return this._userService.getAllUsers()
 	}
 
@@ -55,15 +54,18 @@ export class UsersController {
 		})
 	)
 	updateUser(
+		@Req() req: Request,
 		@Param('id', ParseIntPipe) userId: number,
 		@Body() userData: UpdateUserDto,
 		@UploadedFile() file: Express.Multer.File
 	) {
-		return this._userService.updateUser(userId, userData, file)
+		const userSession = req['user']
+		return this._userService.updateUser(userSession, userId, userData, file)
 	}
 
 	@Delete(':id')
-	deleteUser(@Param('id', ParseIntPipe) userId: number) {
-		return this._userService.deleteUser(userId)
+	deleteUser(@Req() req: Request, @Param('id', ParseIntPipe) userId: number) {
+		const userSession = req['user']
+		return this._userService.deleteUser(userSession, userId)
 	}
 }

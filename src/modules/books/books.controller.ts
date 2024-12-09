@@ -13,7 +13,6 @@ import { BooksService } from './books.service'
 import { CreateBookDto } from './dto/create-book.dto'
 import { UpdateBookDto } from './dto/update-book.dto'
 import { Public } from '../auth/decorators/public.decorator'
-import { Request } from 'express'
 
 @Controller('books')
 export class BooksController {
