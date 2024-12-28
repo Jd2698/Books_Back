@@ -8,6 +8,7 @@ import { join } from 'path'
 import { AuthModule } from './modules/auth/auth.module'
 import { APP_GUARD } from '@nestjs/core'
 import { AuthGuard } from './modules/auth/guards/auth.guard'
+import { RolesModule } from './roles/roles.module';
 
 @Module({
 	imports: [
@@ -18,7 +19,8 @@ import { AuthGuard } from './modules/auth/guards/auth.guard'
 		ServeStaticModule.forRoot({
 			rootPath: join(__dirname, '..', 'images'),
 			serveRoot: '/images'
-		})
+		}),
+		RolesModule
 	],
 	controllers: [],
 	providers: [

@@ -3,9 +3,10 @@ import { UsersService } from './users.service'
 import { UsersController } from './users.controller'
 import { PrismaService } from 'src/prisma.service'
 import { UsersRolesService } from './users_roles.service'
+import { RolesService } from 'src/roles/roles.service'
 
 @Module({
-	providers: [UsersService, UsersRolesService, PrismaService],
+	providers: [UsersService, UsersRolesService, PrismaService, RolesService],
 	controllers: [UsersController]
 })
 export class UsersModule {}

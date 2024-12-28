@@ -11,12 +11,14 @@ import { UpdateUserDto } from './dto/update-user.dto'
 import { deleteImage, saveImage } from 'src/common/utils/image.util'
 import * as bcrypt from 'bcrypt'
 import { UsersRolesService } from './users_roles.service'
+import { RolesService } from 'src/roles/roles.service'
 
 @Injectable()
 export class UsersService {
 	constructor(
 		private _prismaService: PrismaService,
-		private _userRolesService: UsersRolesService
+		private _userRolesService: UsersRolesService,
+		private _roleService: RolesService
 	) {}
 
 	async getAllUsers(): Promise<CreateUserDto[]> {
@@ -80,7 +82,11 @@ export class UsersService {
 				data: userData
 			})
 
-			await this._userRolesService.create(createdUser.id, 2)
+			const roleId =
+				parseInt(userData.roleId) ||
+				(await this._roleService.findByName('client')).id
+
+			await this._userRolesService.create(createdUser.id, roleId)
 
 			return { ...createdUser }
 		} catch (error) {

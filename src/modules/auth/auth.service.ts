@@ -10,12 +10,12 @@ import * as bcrypt from 'bcrypt'
 @Injectable()
 export class AuthService {
 	constructor(
-		private usersService: UsersService,
-		private jwtService: JwtService
+		private _usersService: UsersService,
+		private _jwtService: JwtService
 	) {}
 
 	async signIn(email: string, pass: string): Promise<any> {
-		const foundUser: any = await this.usersService.getUserByEmail(email)
+		const foundUser: any = await this._usersService.getUserByEmail(email)
 		if (!foundUser) {
 			throw new NotFoundException('User not found')
 		}
@@ -32,7 +32,7 @@ export class AuthService {
 			rol: foundUser.usuario_rol[0].rol.name
 		}
 		return {
-			access_token: await this.jwtService.signAsync(payload)
+			access_token: await this._jwtService.signAsync(payload)
 		}
 	}
 }
