@@ -36,10 +36,12 @@ export class UsersController {
 	@Post('')
 	@FileInterceptorDecorator()
 	createUser(
+		@Req() req: Request,
 		@Body() userData: CreateUserDto,
 		@UploadedFile() file: Express.Multer.File
 	) {
-		return this._userService.createUser(userData, file)
+		const userSession = req['user']
+		return this._userService.createUser(userSession, userData, file)
 	}
 
 	@Put(':id')

@@ -55,6 +55,7 @@ export class UsersService {
 	}
 
 	async createUser(
+		userSession: { sub: number; email: string; rol: string },
 		userData: CreateUserDto,
 		file: Express.Multer.File
 	): Promise<any> {
@@ -78,15 +79,20 @@ export class UsersService {
 
 			userData.password = await bcrypt.hash(userData.password, 2)
 
+			const { roleId, ...rest } = userData
 			const createdUser = await this._prismaService.usuario.create({
-				data: userData
+				data: rest
 			})
 
-			const roleId =
-				parseInt(userData.roleId) ||
-				(await this._roleService.findByName('client')).id
+			let rolId: number
+			if (userSession && userSession.rol == 'admin') {
+				rolId =
+					Number(roleId) || (await this._roleService.findByName('client')).id
+			} else {
+				rolId = (await this._roleService.findByName('client')).id
+			}
 
-			await this._userRolesService.create(createdUser.id, roleId)
+			await this._userRolesService.create(createdUser.id, rolId)
 
 			return { ...createdUser }
 		} catch (error) {
@@ -131,10 +137,26 @@ export class UsersService {
 				userData.password = await bcrypt.hash(userData.password, 2)
 			}
 
+			const { roleId, ...rest } = userData
+
 			const updatedUser = await this._prismaService.usuario.update({
 				where: { id: userId },
-				data: userData
+				data: rest
 			})
+
+			if (userSession.rol == 'admin') {
+				const userRoles = await this._userRolesService.getbyUserId(
+					updatedUser.id
+				)
+
+				if (roleId != userRoles.rol_id) {
+					console.log(userRoles, roleId)
+
+					await this._userRolesService.update(userRoles.id, {
+						rol_id: Number(roleId)
+					})
+				}
+			}
 
 			return updatedUser
 		} catch (error) {
