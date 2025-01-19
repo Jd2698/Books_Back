@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common'
 import { UsersService } from './users.service'
 import { UsersController } from './users.controller'
 import { PrismaService } from 'src/prisma.service'
-import { UsersRolesService } from './users_roles.service'
+import { UsersRolesService } from '../users_roles/users_roles.service'
 import { RolesService } from 'src/roles/roles.service'
 
 @Module({

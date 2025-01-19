@@ -1,5 +1,6 @@
 import {
 	ConflictException,
+	ForbiddenException,
 	Injectable,
 	InternalServerErrorException,
 	NotFoundException,
@@ -10,8 +11,9 @@ import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { deleteImage, saveImage } from 'src/common/utils/image.util'
 import * as bcrypt from 'bcrypt'
-import { UsersRolesService } from './users_roles.service'
+import { UsersRolesService } from '../users_roles/users_roles.service'
 import { RolesService } from 'src/roles/roles.service'
+import { roles } from 'src/enums/roles.enum'
 
 @Injectable()
 export class UsersService {
@@ -85,7 +87,7 @@ export class UsersService {
 			})
 
 			let rolId: number
-			if (userSession && userSession.rol == 'admin') {
+			if (userSession && userSession.rol == roles.Admin) {
 				rolId =
 					Number(roleId) || (await this._roleService.findByName('client')).id
 			} else {
@@ -115,8 +117,8 @@ export class UsersService {
 		file: Express.Multer.File
 	): Promise<UpdateUserDto> {
 		try {
-			if (userSession.sub != userId && userSession.rol != 'admin')
-				throw new UnauthorizedException()
+			if (userSession.sub != userId && userSession.rol != roles.Admin)
+				throw new ForbiddenException()
 
 			// validar que exista
 			await this.getUserById(userId)
@@ -144,7 +146,7 @@ export class UsersService {
 				data: rest
 			})
 
-			if (userSession.rol == 'admin') {
+			if (userSession.rol == roles.Admin) {
 				const userRoles = await this._userRolesService.getbyUserId(
 					updatedUser.id
 				)
@@ -173,7 +175,7 @@ export class UsersService {
 		userId: number
 	): Promise<CreateUserDto> {
 		try {
-			if (userSession.rol != 'admin') throw new UnauthorizedException()
+			if (userSession.rol != roles.Admin) throw new UnauthorizedException()
 
 			const deletedUser = await this._prismaService.usuario.delete({
 				where: { id: userId }
