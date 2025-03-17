@@ -7,13 +7,13 @@ export class RolSeeder {
 				name: 'admin'
 			}
 		})
-		console.log('rol admin creado con exito')
+		console.log('rol admin was created successfully')
 
 		await this.prisma.rol.create({
 			data: {
 				name: 'client'
 			}
 		})
-		console.log('rol client creado con exito')
+		console.log('rol client was created successfully')
 	}
 }
