@@ -6,6 +6,7 @@ import {
 import { UsersService } from '../users/users.service'
 import { JwtService } from '@nestjs/jwt'
 import * as bcrypt from 'bcrypt'
+import { CookieOptions, Request, Response } from 'express'
 
 @Injectable()
 export class AuthService {
@@ -14,7 +15,7 @@ export class AuthService {
 		private _jwtService: JwtService
 	) {}
 
-	async signIn(email: string, pass: string): Promise<any> {
+	async signIn(response: Response, email: string, pass: string): Promise<any> {
 		const foundUser: any = await this._usersService.getUserByEmail(email)
 		if (!foundUser) {
 			throw new NotFoundException('User not found')
@@ -31,8 +32,52 @@ export class AuthService {
 			email: foundUser.email,
 			rol: foundUser.usuario_rol[0].rol.name
 		}
-		return {
-			access_token: await this._jwtService.signAsync(payload)
+
+		await this.createTokens(response, payload, true)
+	}
+
+	async refreshToken(response: Response, request: Request) {
+		try {
+			const refreshToken = request.cookies['refresh_token']
+			if (!refreshToken) throw new Error()
+
+			const { sub, email, rol, ...res } = await this._jwtService.verifyAsync(
+				refreshToken
+			)
+
+			await this.createTokens(response, { sub, email, rol }, false)
+		} catch (e) {
+			throw new UnauthorizedException('Invalid refresh token')
+		}
+	}
+
+	async createTokens(
+		response: Response,
+		payload: Record<string, any>,
+		withRefreshToken: boolean
+	): Promise<void> {
+		const cookiesOptions: CookieOptions = {
+			httpOnly: true,
+			sameSite: 'strict',
+			secure: false
+		}
+
+		const accessToken = await this._jwtService.signAsync(payload)
+
+		response.cookie('access_token', accessToken, {
+			...cookiesOptions,
+			maxAge: 15 * 60 * 1000 // 15 minutes
+		})
+
+		if (withRefreshToken) {
+			const refreshToken = await this._jwtService.signAsync(payload, {
+				expiresIn: '7d'
+			})
+
+			response.cookie('refresh_token', refreshToken, {
+				...cookiesOptions,
+				maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+			})
 		}
 	}
 }
