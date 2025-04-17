@@ -5,7 +5,8 @@ import {
 	Res,
 	HttpCode,
 	HttpStatus,
-	Req
+	Req,
+	Get
 } from '@nestjs/common'
 import { AuthService } from './auth.service'
 import { LoginAuthDto } from './dto/login-auth.dto'
@@ -20,6 +21,11 @@ export class AuthController {
 		private readonly authService: AuthService,
 		private readonly usersService: UsersService
 	) {}
+
+	@Get('check')
+	check(@Req() req: Request) {
+		return { authenticated: true }
+	}
 
 	@Public()
 	@Post('login')
@@ -40,6 +46,7 @@ export class AuthController {
 		return this.usersService.createUser(null, createUserDto, null)
 	}
 
+	@Public()
 	@Post('refresh')
 	refresh(
 		@Res({ passthrough: true }) response: Response,

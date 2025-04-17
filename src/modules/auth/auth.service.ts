@@ -15,7 +15,7 @@ export class AuthService {
 		private _jwtService: JwtService
 	) {}
 
-	async signIn(response: Response, email: string, pass: string): Promise<any> {
+	async signIn(response: Response, email: string, pass: string): Promise<void> {
 		const foundUser: any = await this._usersService.getUserByEmail(email)
 		if (!foundUser) {
 			throw new NotFoundException('User not found')
@@ -58,8 +58,8 @@ export class AuthService {
 	): Promise<void> {
 		const cookiesOptions: CookieOptions = {
 			httpOnly: true,
-			sameSite: 'strict',
-			secure: false
+			sameSite: 'none',
+			secure: true
 		}
 
 		const accessToken = await this._jwtService.signAsync(payload)
