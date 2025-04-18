@@ -7,8 +7,14 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgres"
   url      = env("DATABASE_URL")
+  directUrl = env("STAGE_DIRECT_URL")
+}
+
+model Test {
+  id         Int     @id @default(autoincrement())
+  name       String
 }
 
 model Usuario {
