@@ -12,7 +12,7 @@ import { UpdateUserDto } from './dto/update-user.dto'
 import { deleteImage, saveImage } from 'src/common/utils/image.util'
 import * as bcrypt from 'bcrypt'
 import { UsersRolesService } from '../users_roles/users_roles.service'
-import { RolesService } from 'src/roles/roles.service'
+import { RolesService } from 'src/modules/roles/roles.service'
 import { roles } from 'src/enums/roles.enum'
 
 @Injectable()

@@ -10,8 +10,6 @@ import { PrismaService } from 'src/prisma.service'
 import { CreateBookDto } from './dto/create-book.dto'
 import { UpdateBookDto } from './dto/update-book.dto'
 import { EstadoPrestamo } from 'src/enums/estadoPrestamo.enum'
-import { roles } from 'src/enums/roles.enum'
-
 @Injectable()
 export class BooksService {
 	constructor(private _prismaService: PrismaService) {}

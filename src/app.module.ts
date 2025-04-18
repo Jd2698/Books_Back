@@ -8,18 +8,22 @@ import { join } from 'path'
 import { AuthModule } from './modules/auth/auth.module'
 import { APP_GUARD } from '@nestjs/core'
 import { AuthGuard } from './modules/auth/guards/auth.guard'
-import { RolesModule } from './roles/roles.module';
-
+import { RolesModule } from './modules/roles/roles.module'
+import { ConfigModule } from '@nestjs/config'
 @Module({
 	imports: [
-		BooksModule,
-		UsersModule,
-		LoansModule,
-		AuthModule,
+		ConfigModule.forRoot({
+			isGlobal: true,
+			envFilePath: `.env.${process.env.NODE_ENV || 'dev'}`
+		}),
 		ServeStaticModule.forRoot({
 			rootPath: join(__dirname, '..', 'images'),
 			serveRoot: '/images'
 		}),
+		BooksModule,
+		UsersModule,
+		LoansModule,
+		AuthModule,
 		RolesModule
 	],
 	controllers: [],
