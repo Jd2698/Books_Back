@@ -6,10 +6,7 @@
 	"private": true,
 	"license": "UNLICENSED",
 	"scripts": {
-		"prepare:dev": "copy .env.dev .env && npx prisma generate",
-		"prepare:stg": "copy .env.stg .env && npx prisma generate",
-		"start:dev": "npm run prepare:dev && cross-env NODE_ENV=dev nest start --watch",
-		"start:stg": "npm run prepare:stg && cross-env NODE_ENV=stg nest start --watch",
+		"start:dev": "nest start --watch",
 		"seed": "npx ts-node prisma/seed/seed.ts",
 		"db-reset": "npx prisma migrate reset",
 		"build": "nest build",

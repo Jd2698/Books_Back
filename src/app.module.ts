@@ -10,11 +10,12 @@ import { APP_GUARD } from '@nestjs/core'
 import { AuthGuard } from './modules/auth/guards/auth.guard'
 import { RolesModule } from './modules/roles/roles.module'
 import { ConfigModule } from '@nestjs/config'
+
 @Module({
 	imports: [
 		ConfigModule.forRoot({
 			isGlobal: true,
-			envFilePath: `.env.${process.env.NODE_ENV || 'dev'}`
+			envFilePath: '.env'
 		}),
 		ServeStaticModule.forRoot({
 			rootPath: join(__dirname, '..', 'images'),

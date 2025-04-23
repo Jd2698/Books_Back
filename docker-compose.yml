@@ -1,0 +1,14 @@
+version: "3.8"
+services:
+  postgres:
+    image: postgres:13-alpine
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: jd
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: db_books
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"

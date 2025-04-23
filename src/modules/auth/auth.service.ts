@@ -11,12 +11,12 @@ import { CookieOptions, Request, Response } from 'express'
 @Injectable()
 export class AuthService {
 	constructor(
-		private _usersService: UsersService,
-		private _jwtService: JwtService
+		private usersService: UsersService,
+		private jwtService: JwtService
 	) {}
 
 	async signIn(response: Response, email: string, pass: string): Promise<void> {
-		const foundUser: any = await this._usersService.getUserByEmail(email)
+		const foundUser: any = await this.usersService.getUserByEmail(email)
 		if (!foundUser) {
 			throw new NotFoundException('User not found')
 		}
@@ -41,7 +41,7 @@ export class AuthService {
 			const refreshToken = request.cookies['refresh_token']
 			if (!refreshToken) throw new Error()
 
-			const { sub, email, rol, ...res } = await this._jwtService.verifyAsync(
+			const { sub, email, rol, ...res } = await this.jwtService.verifyAsync(
 				refreshToken
 			)
 
@@ -56,13 +56,17 @@ export class AuthService {
 		payload: Record<string, any>,
 		withRefreshToken: boolean
 	): Promise<void> {
+
+		/**
+		 * If you are using a tool to make the request, comment on the last two options.
+		 */
 		const cookiesOptions: CookieOptions = {
 			httpOnly: true,
-			sameSite: 'none',
-			secure: true
+			// sameSite: 'none',
+			// secure: true
 		}
 
-		const accessToken = await this._jwtService.signAsync(payload)
+		const accessToken = await this.jwtService.signAsync(payload)
 
 		response.cookie('access_token', accessToken, {
 			...cookiesOptions,
@@ -70,7 +74,7 @@ export class AuthService {
 		})
 
 		if (withRefreshToken) {
-			const refreshToken = await this._jwtService.signAsync(payload, {
+			const refreshToken = await this.jwtService.signAsync(payload, {
 				expiresIn: '7d'
 			})
 
