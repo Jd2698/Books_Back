@@ -11,6 +11,7 @@ import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { deleteImage, saveImage } from 'src/common/utils/image.util'
 import * as bcrypt from 'bcrypt'
+import * as crypto from 'crypto'
 import { UsersRolesService } from '../users_roles/users_roles.service'
 import { RolesService } from 'src/modules/roles/roles.service'
 import { roles } from 'src/enums/roles.enum'
@@ -18,17 +19,17 @@ import { roles } from 'src/enums/roles.enum'
 @Injectable()
 export class UsersService {
 	constructor(
-		private _prismaService: PrismaService,
-		private _userRolesService: UsersRolesService,
-		private _roleService: RolesService
+		private prismaService: PrismaService,
+		private userRolesService: UsersRolesService,
+		private roleService: RolesService
 	) {}
 
 	async getAllUsers(): Promise<CreateUserDto[]> {
-		return await this._prismaService.usuario.findMany()
+		return await this.prismaService.usuario.findMany()
 	}
 
-	async getUserByEmail(userEmail: string): Promise<CreateUserDto> {
-		const foundUser = await this._prismaService.usuario.findFirst({
+	async getUserByEmail(userEmail: string): Promise<any> {
+		const foundUser = await this.prismaService.usuario.findFirst({
 			where: {
 				email: userEmail
 			},
@@ -41,12 +42,12 @@ export class UsersService {
 			}
 		})
 
-		if (!foundUser) throw new NotFoundException('User not found')
+		// if (!foundUser) throw new NotFoundException('User not found')
 		return foundUser
 	}
 
 	async getUserById(userId: number): Promise<CreateUserDto> {
-		const user = await this._prismaService.usuario.findFirst({
+		const user = await this.prismaService.usuario.findFirst({
 			where: {
 				id: userId
 			}
@@ -56,13 +57,31 @@ export class UsersService {
 		return user
 	}
 
+	async createGoogleUser(userData: { email: string; name: string }) {
+		const rolId = (await this.roleService.findByName('client')).id
+
+		const randomPassword = crypto.randomBytes(16).toString('hex')
+		const hashedPassword = await bcrypt.hash(randomPassword, 10)
+		const createdUser = await this.prismaService.usuario.create({
+			data: {
+				email: userData.email,
+				nombre: userData.name,
+				password: hashedPassword
+			}
+		})
+
+		await this.userRolesService.create(createdUser.id, rolId)
+
+		return createdUser
+	}
+
 	async createUser(
 		userSession: { sub: number; email: string; rol: string },
 		userData: CreateUserDto,
 		file: Express.Multer.File
 	): Promise<any> {
 		try {
-			const emailNotValid = await this._prismaService.usuario.findFirst({
+			const emailNotValid = await this.prismaService.usuario.findFirst({
 				where: {
 					email: userData.email
 				}
@@ -82,19 +101,19 @@ export class UsersService {
 			userData.password = await bcrypt.hash(userData.password, 2)
 
 			const { roleId, ...rest } = userData
-			const createdUser = await this._prismaService.usuario.create({
+			const createdUser = await this.prismaService.usuario.create({
 				data: rest
 			})
 
 			let rolId: number
 			if (userSession && userSession.rol == roles.Admin) {
 				rolId =
-					Number(roleId) || (await this._roleService.findByName('client')).id
+					Number(roleId) || (await this.roleService.findByName('client')).id
 			} else {
-				rolId = (await this._roleService.findByName('client')).id
+				rolId = (await this.roleService.findByName('client')).id
 			}
 
-			await this._userRolesService.create(createdUser.id, rolId)
+			await this.userRolesService.create(createdUser.id, rolId)
 
 			return { ...createdUser }
 		} catch (error) {
@@ -141,20 +160,20 @@ export class UsersService {
 
 			const { roleId, ...rest } = userData
 
-			const updatedUser = await this._prismaService.usuario.update({
+			const updatedUser = await this.prismaService.usuario.update({
 				where: { id: userId },
 				data: rest
 			})
 
 			if (userSession.rol == roles.Admin) {
-				const userRoles = await this._userRolesService.getbyUserId(
+				const userRoles = await this.userRolesService.getbyUserId(
 					updatedUser.id
 				)
 
 				if (roleId != userRoles.rol_id) {
 					console.log(userRoles, roleId)
 
-					await this._userRolesService.update(userRoles.id, {
+					await this.userRolesService.update(userRoles.id, {
 						rol_id: Number(roleId)
 					})
 				}
@@ -177,7 +196,7 @@ export class UsersService {
 		try {
 			if (userSession.rol != roles.Admin) throw new UnauthorizedException()
 
-			const deletedUser = await this._prismaService.usuario.delete({
+			const deletedUser = await this.prismaService.usuario.delete({
 				where: { id: userId }
 			})
 

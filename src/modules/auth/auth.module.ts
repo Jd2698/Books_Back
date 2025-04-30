@@ -7,6 +7,7 @@ import { UsersModule } from '../users/users.module'
 import { JwtModule } from '@nestjs/jwt'
 import { UsersRolesService } from '../users_roles/users_roles.service'
 import { RolesService } from 'src/modules/roles/roles.service'
+import { GoogleAuthService } from './google-auth.service'
 
 @Module({
 	imports: [
@@ -20,6 +21,7 @@ import { RolesService } from 'src/modules/roles/roles.service'
 	controllers: [AuthController],
 	providers: [
 		AuthService,
+		GoogleAuthService,
 		UsersService,
 		UsersRolesService,
 		PrismaService,

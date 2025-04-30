@@ -45,7 +45,7 @@ export class UsersController {
 		@Body() userData: CreateUserDto,
 		@UploadedFile() file: Express.Multer.File
 	) {
-		const userSession = req['user']
+		const userSession = req['user'] as  { sub: number; email: string; rol: string }
 		return this._userService.createUser(userSession, userData, file)
 	}
 
@@ -66,13 +66,13 @@ export class UsersController {
 		@Body() userData: UpdateUserDto,
 		@UploadedFile() file: Express.Multer.File
 	) {
-		const userSession = req['user']
+		const userSession = req['user'] as  { sub: number; email: string; rol: string }
 		return this._userService.updateUser(userSession, userId, userData, file)
 	}
 
 	@Delete(':id')
 	deleteUser(@Req() req: Request, @Param('id', ParseIntPipe) userId: number) {
-		const userSession = req['user']
+		const userSession = req['user'] as  { sub: number; email: string; rol: string }
 		return this._userService.deleteUser(userSession, userId)
 	}
 }

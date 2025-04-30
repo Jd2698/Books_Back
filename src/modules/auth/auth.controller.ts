@@ -24,7 +24,16 @@ export class AuthController {
 
 	@Get('check')
 	check(@Req() req: Request) {
-		return { authenticated: true }
+		return req['user']
+	}
+
+	@Public()
+	@Post('google')
+	googleLogin(
+		@Res({ passthrough: true }) response: Response,
+		@Body('tokenId') tokenId: string
+	) {
+		return this.authService.signInWithGoogle(response, tokenId)
 	}
 
 	@Public()

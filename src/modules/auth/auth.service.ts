@@ -7,15 +7,21 @@ import { UsersService } from '../users/users.service'
 import { JwtService } from '@nestjs/jwt'
 import * as bcrypt from 'bcrypt'
 import { CookieOptions, Request, Response } from 'express'
+import { GoogleAuthService } from './google-auth.service'
 
 @Injectable()
 export class AuthService {
 	constructor(
+		private readonly googleAuthService: GoogleAuthService,
 		private usersService: UsersService,
 		private jwtService: JwtService
 	) {}
 
-	async signIn(response: Response, email: string, pass: string): Promise<void> {
+	async signIn(
+		response: Response,
+		email: string,
+		pass: string
+	): Promise<{ sub: string; email: string; rol: string }> {
 		const foundUser: any = await this.usersService.getUserByEmail(email)
 		if (!foundUser) {
 			throw new NotFoundException('User not found')
@@ -34,6 +40,33 @@ export class AuthService {
 		}
 
 		await this.createTokens(response, payload, true)
+		return payload
+	}
+
+	async signInWithGoogle(
+		response: Response,
+		tokenId: string
+	): Promise<{ sub: string; email: string; rol: string }> {
+		const googleUser = await this.googleAuthService.verifyToken(tokenId)
+
+		const email = googleUser.email
+		let user = await this.usersService.getUserByEmail(email)
+
+		if (!user) {
+			user = await this.usersService.createGoogleUser({
+				email: googleUser.email,
+				name: googleUser.name
+			})
+		}
+
+		const payload = {
+			sub: user.id,
+			email: user.email,
+			rol: user.usuario_rol[0].rol.name
+		}
+
+		await this.createTokens(response, payload, true)
+		return payload
 	}
 
 	async refreshToken(response: Response, request: Request) {
@@ -56,12 +89,11 @@ export class AuthService {
 		payload: Record<string, any>,
 		withRefreshToken: boolean
 	): Promise<void> {
-
 		/**
 		 * If you are using a tool to make the request, comment on the last two options.
 		 */
 		const cookiesOptions: CookieOptions = {
-			httpOnly: true,
+			httpOnly: true
 			// sameSite: 'none',
 			// secure: true
 		}
