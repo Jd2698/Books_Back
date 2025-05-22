@@ -3,7 +3,7 @@ services:
   postgres:
     image: postgres:13-alpine
     container_name: postgres_db
-    restart: always
+    # restart: always
     environment:
       POSTGRES_USER: jd
       POSTGRES_PASSWORD: root
@@ -11,4 +11,4 @@ services:
     volumes:
       - ./postgres:/var/lib/postgresql/data
     ports:
-      - "5433:5432"
+      - 5433:5432
